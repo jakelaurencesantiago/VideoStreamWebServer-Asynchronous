@@ -23,3 +23,4 @@ An improved version of /jakelaurencesantiago/VideoStreamWebServer
 3. Error paths
 4. Increase category margin
 5. Force scroll to top on selection
+6. Update font sizes
