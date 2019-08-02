@@ -21,3 +21,5 @@ An improved version of /jakelaurencesantiago/VideoStreamWebServer
 1. Banner
 2. Video reposition when out of view
 3. Error paths
+4. Increase category margin
+5. Force scroll to top on selection
