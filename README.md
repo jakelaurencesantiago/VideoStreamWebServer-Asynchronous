@@ -19,14 +19,4 @@ An improved version of /jakelaurencesantiago/VideoStreamWebServer
 
 # TODO
 1. Banner
-2. Video reposition when out of view
-3. Error paths
-4. Increase category margin
-5. Force scroll to top on selection
-6. Update font sizes
-7. put 'r' flag for openSync (required for linux)
-8. character limit for category name
-9. larger font size for video name
-10. do something about hidden elements
-11. category width height constant
-12. video onclick/ontouch play
+2. Banner/Thumbnail generator
