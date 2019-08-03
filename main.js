@@ -87,10 +87,10 @@ app.get('/video', (req, res) => {
             let thumbnail = findFile(name + '.png');
             thumbnail = thumbnail ? `${path}/${thumbnail}` : DEFAULT_THUMBNAIL;
             const p = `${path}/${name}`;
-            return {name: name, thumbnail: thumbnail, path: p, time: getVideoDuration(videoDir + p)};
+            return {name: name, thumbnail: thumbnail, time: getVideoDuration(videoDir + p), base: path};
         });
 
-        const ret = {base: path, videoInx: playerVideo, videoList: playerList};
+        const ret = {videoInx: playerVideo, videoList: playerList};
         
         res.status(200).send(ret);
     });
@@ -106,7 +106,7 @@ function getVideoDuration(path) {
     let mm = 0;
     let hh = 0;
     try {
-        const fd = fs.openSync(path);
+        const fd = fs.openSync(path, 'r');
         const buffSize = 128;
         const buffer = Buffer.alloc(buffSize);
         const bytesRead = fs.readSync(fd, buffer, 0, buffSize, 0);
