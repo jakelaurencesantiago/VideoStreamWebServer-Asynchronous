@@ -4,18 +4,26 @@ window.onload = () => {
     videoList();
 };
 
-window.onscroll = () => {
-    //TODO
-    //check for video tag
-    //if video tag's offsetX < -???
-    //change tags holder to fixed at bottom right
+window.onscroll = async () => {
+    const videoPlayer = selector('.video_player');
+    const videoContainer = selector('.video_container');
+    if(videoPlayer && videoContainer) {
+        const rect = videoContainer.getBoundingClientRect();
+        if(Math.floor(rect.top) < 0) {
+            videoPlayer.classList.add("fixed");
+        }
+        else {
+            videoPlayer.classList.remove("fixed");
+        }
+    }
 }
 
 function videoList(path) {
+    hideEmpty();
+    hideError();
     let query = '/videolist'
     if(path) {
         query += '?path=' + path;
-        displayBackBtn(); //call not from onload
     }
     fetchJSON(query, {method: 'GET'}, 
         json => {
@@ -39,20 +47,27 @@ function videoList(path) {
                     menuWrapper.appendChild(div);
                     
                     setTimeout(() => {
+                        if(path) { //display when not from onload
+                            displayBackBtn(); //call not from onload
+                        }
                         div.classList.remove("hiddenRight");
-                        if(div.previousElementSibling) 
+                        if(div.previousElementSibling) {
                             div.previousElementSibling.classList.add("hiddenLeft");
-                    }, 100);
+                            setTimeout(() => div.previousElementSibling.classList.add("gone"), 600);
+                        }
+                    }, 50);
                 }
                 else {
                     displayEmpty();
                 }
             }
+            window.scroll({top: 0});
         });
 }
 
 function loadVideo(path, file) {
-    displayBackBtn();
+    hideEmpty();
+    hideError();
     let query = '/video?'
     if(file) query += 'file=' + file;
     if(path) query += '&path=' + path;
@@ -76,12 +91,15 @@ function loadVideo(path, file) {
                     div.classList.remove("hiddenRight");
                     if(menuWrapper.lastElementChild) {
                         menuWrapper.lastElementChild.classList.add("hiddenLeft");
+                        setTimeout(() => menuWrapper.lastElementChild.classList.add("gone"), 600);
                     }
                     if(div.previousElementSibling) {
                         div.previousElementSibling.remove();
                     }
-                }, 100);
+                    displayBackBtn();
+                }, 50);
             }
+            window.scroll({top: 0});
         });
 }
 
@@ -101,15 +119,21 @@ function makeCategoryList(list) {
     return div;
 }
 
-function makeVideoList(list) {
+function makeVideoList(list, selectedVid) {
     const div = createElement('div');
     let html = '';
     if(!isEmpty(list)){
         html = '<h3>Video List</h3>';
         let num = 1;
         for(var item of list) {
-            html += `<div class="vid_item" onclick="loadVideo('${item.base}', '${item.name}')">
-                        <div class="vid_info">${num}</div>
+            if(item.name === selectedVid) {
+                html += `<div class="vid_item selected">`;
+            }
+            else {
+                html += `<div class="vid_item" onclick="loadVideo('${item.base}', '${item.name}')">`;
+            }
+            
+            html += `   <div class="vid_info">${num}</div>
                         <img src="${item.thumbnail}">
                         <div class="vid_info">
                             <div class="vid_title">${removeExtension(item.name)}</div>
@@ -132,41 +156,28 @@ function makeVideo(data) {
     let html = `
         <div id="video_holder">
             <h3>${removeExtension(video.name)}</h3>
-            <video poster="${video.thumbnail}" controls playsinline>
-                <source src="${video.path}" type="video/mp4">
-            </video>
+            <div class="video_container">
+                <video poster="${video.thumbnail}" controls playsinline
+                    class="video_player"
+                    ontouchstart="vidTouchStart(this)"
+                    ontouchend="vidTouchEnd(this)"
+                    ontouchmove="vidTouchMove(this)">
+                    <source src="${video.base}/${video.name}" type="video/mp4">
+                </video>
+            </div>
         </div>`;
 
-        html += `<div class="video_list_holder">
-                    <h3>Playlist</h3>`;
-        let num = 1;
-        for(var item of videoList) {
-            if(item === video) {
-                html += `<div class="vid_item selected">`;
-            }
-            else {
-                html += `<div class="vid_item" onclick="loadVideo('${data.base}', '${item.name}')">`;
-            }
-            
-            html += `<div class="vid_info">${num}</div>
-                        <img src="${item.thumbnail}">
-                        <div class="vid_info">
-                            <div class="vid_title">${removeExtension(item.name)}</div>
-                            <div class="vid_time">
-                                ${item.time.hh}:${item.time.mm}:${item.time.ss}
-                            </div>
-                        </div>
-                    </div>`
-            num++;
-        }
-
-        html += '</div>';
-
     div.innerHTML = html;
+
+    div.appendChild(makeVideoList(videoList, video.name));
+
     return div;
 }
 
 function back() {
+    hideEmpty();
+    hideError();
+    window.scroll({top: 0});
     const videoWrapper = selector('#video_wrapper');
     const menuWrapper = selector('#menu_wrapper');
     let lastElem = null;
@@ -175,9 +186,11 @@ function back() {
         lastElem = videoWrapper.lastElementChild;
         lastElem.classList.add('hiddenRight');
         if(lastElem.previousElementSibling) {
+            lastElem.previousElementSibling.classList.remove('gone');
             lastElem.previousElementSibling.classList.remove('hiddenLeft');
         }
         else if(menuWrapper.lastElementChild) {
+            menuWrapper.lastElementChild.classList.remove('gone');
             menuWrapper.lastElementChild.classList.remove('hiddenLeft');
         }
     }
@@ -185,6 +198,7 @@ function back() {
         console.log("Menu back");
         lastElem = menuWrapper.lastElementChild;
         lastElem.classList.add('hiddenRight');
+        lastElem.previousElementSibling.classList.remove('gone');
         lastElem.previousElementSibling.classList.remove('hiddenLeft');
     }
     else {
@@ -198,7 +212,7 @@ function back() {
             if(menuWrapper.childElementCount <= 1) {
                 hideBackBtn();
             }
-        }, 1000);
+        }, 700);
     }
 }
 
@@ -210,20 +224,51 @@ function fetchJSON(path, options, callback) {
 }
 
 
+function vidTouchStart(elem) {
+    elem.isVidTouched = true;
+}
+
+function vidTouchEnd(elem) {
+    if(elem.isVidTouched) {
+        playVideo(elem);
+    }
+}
+
+function vidTouchMove(elem) {
+    elem.isVidTouched = false;
+}
+
+function playVideo(elem) {
+    if(elem && elem.play && elem.pause) {
+        if(elem.paused) elem.play();
+        else elem.pause();
+    }
+}
+
 function displayError() {
-    selector('#error_message').classList.remove('hidden');
+    const msg = selector('#error_message');
+    msg.classList.remove('gone');
 }
 
 function displayEmpty() {
-    selector('#empty_message').classList.remove('hidden');
+    const msg = selector('#empty_message');
+    msg.classList.remove('gone');
+}
+
+function hideError() {
+    selector('#error_message').classList.add('gone');
+}
+
+function hideEmpty() {
+    selector('#empty_message').classList.add('gone');
 }
 
 function displayBackBtn() {
-    selector('#back_button_wrapper').classList.remove('hidden');
+    selector('#back_button_wrapper').classList.remove('gone');
 }
 
 function hideBackBtn() {
-    selector('#back_button_wrapper').classList.add('hidden');
+    selector('#back_button_wrapper').classList.add('gone');
 }
 
 function removeExtension(filename) {
