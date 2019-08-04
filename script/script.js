@@ -1,6 +1,9 @@
-'use strict';
 
-window.onload = () => {
+
+var bannerChangeTimer = null;
+
+
+window.onload = function() {
     videoList();
 };
 
@@ -19,14 +22,14 @@ window.onscroll = async () => {
 }
 
 function videoList(path) {
-    hideEmpty();
-    hideError();
-    let query = '/videolist'
+    transitionInit();
+    var query = '/videolist'
     if(path) {
         query += '?path=' + path;
     }
     fetchJSON(query, {method: 'GET'}, 
         json => {
+            hideLoadscreen();
             if(json.error) {
                 console.log("videoList " + json.error);
                 displayError();
@@ -46,6 +49,8 @@ function videoList(path) {
 
                     menuWrapper.appendChild(div);
                     
+                    makeBanner(json.categoryList.concat(json.videoList));
+
                     setTimeout(() => {
                         if(path) { //display when not from onload
                             displayBackBtn(); //call not from onload
@@ -61,18 +66,18 @@ function videoList(path) {
                     displayEmpty();
                 }
             }
-            window.scroll({top: 0});
+            scrollToTop();
         });
 }
 
 function loadVideo(path, file) {
-    hideEmpty();
-    hideError();
-    let query = '/video?'
+    transitionInit();
+    var query = '/video?'
     if(file) query += 'file=' + file;
     if(path) query += '&path=' + path;
     fetchJSON(query, {method: "GET"},
         json => {
+            hideLoadscreen();
             if(json.error) {
                 console.log("loadVideo " + json.error);
                 displayError();
@@ -87,6 +92,9 @@ function loadVideo(path, file) {
                 div.appendChild(makeVideo(json));
 
                 videoWrapper.appendChild(div);
+
+                makeBanner(json.videoList);
+
                 setTimeout(() => {
                     div.classList.remove("hiddenRight");
                     if(menuWrapper.lastElementChild) {
@@ -98,6 +106,7 @@ function loadVideo(path, file) {
                     }
                     displayBackBtn();
                 }, 50);
+                scrollToTop();
             }
             window.scroll({top: 0});
         });
@@ -105,7 +114,7 @@ function loadVideo(path, file) {
 
 function makeCategoryList(list) {
     const div = createElement('div');
-    let html = '';
+    var html = '';
     if(!isEmpty(list)) {
         html = '<h3>Categrory List</h3>';
         for(var item of list) {
@@ -121,10 +130,10 @@ function makeCategoryList(list) {
 
 function makeVideoList(list, selectedVid) {
     const div = createElement('div');
-    let html = '';
+    var html = '';
     if(!isEmpty(list)){
         html = '<h3>Video List</h3>';
-        let num = 1;
+        var num = 1;
         for(var item of list) {
             if(item.name === selectedVid) {
                 html += `<div class="vid_item selected">`;
@@ -153,7 +162,7 @@ function makeVideo(data) {
     const div = createElement('div');
     const videoList = data.videoList;
     const video = videoList[data.videoInx];
-    let html = `
+    var html = `
         <div id="video_holder">
             <h3>${removeExtension(video.name)}</h3>
             <div class="video_container">
@@ -174,13 +183,48 @@ function makeVideo(data) {
     return div;
 }
 
+function makeBanner(list) {
+    if(list) {
+        list = list.filter(item => item.thumbnail && !item.thumbnail.includes('default'))
+            .map(item => item.thumbnail);
+    
+        clearTimeout(bannerChangeTimer);
+        scrollBanner(list, 0);
+    }
+}
+
+function scrollBanner(list, index) {
+    const bannerHolder = selector('#banner_images');
+    
+    if(index >= list.length) {
+        index = 0;
+    }
+
+    const img = createElement('img');
+    img.src = list[index];
+
+    bannerHolder.appendChild(img);
+
+    if(bannerHolder.childElementCount > 1) {
+        if(bannerHolder.firstElementChild.style.marginLeft === "-100%") {
+            bannerHolder.firstElementChild.remove();
+        }
+
+        bannerHolder.firstElementChild.style.marginLeft = "-100%";
+    }
+
+    if(list.length > 1) {
+        bannerChangeTimer = setTimeout(() => scrollBanner(list, index + 1), 2000);
+    }
+}
+
 function back() {
     hideEmpty();
     hideError();
     window.scroll({top: 0});
     const videoWrapper = selector('#video_wrapper');
     const menuWrapper = selector('#menu_wrapper');
-    let lastElem = null;
+    var lastElem = null;
     if(videoWrapper.childElementCount > 0) {
         console.log("Video back");
         lastElem = videoWrapper.lastElementChild;
@@ -217,12 +261,32 @@ function back() {
 }
 
 function fetchJSON(path, options, callback) {
-    return fetch(path, options)
+    if (!('fetch' in window)) {
+        console.log('Fetch API not found, try including the polyfill');
+        displayError();
+        hideLoadscreen();
+        return;
+    }
+    
+    return window.fetch(path, options)
         .then(response => response.json())
         .then(callback)
-        .catch(console.log);
+        .catch(e => {
+            console.log(e);
+            displayError();
+            hideLoadscreen();
+        });
 }
 
+function transitionInit() {
+    displayLoadscreen();
+    hideEmpty();
+    hideError();
+}
+
+function scrollToTop() {
+    window.scroll({top: 0});
+}
 
 function vidTouchStart(elem) {
     elem.isVidTouched = true;
@@ -246,13 +310,11 @@ function playVideo(elem) {
 }
 
 function displayError() {
-    const msg = selector('#error_message');
-    msg.classList.remove('gone');
+    selector('#error_message').remove('gone');
 }
 
 function displayEmpty() {
-    const msg = selector('#empty_message');
-    msg.classList.remove('gone');
+    selector('#empty_message').remove('gone');
 }
 
 function hideError() {
@@ -261,6 +323,14 @@ function hideError() {
 
 function hideEmpty() {
     selector('#empty_message').classList.add('gone');
+}
+
+function displayLoadscreen() {
+    selector('#load_screen').classList.remove('gone');
+}
+
+function hideLoadscreen() {
+    selector('#load_screen').classList.add('gone');
 }
 
 function displayBackBtn() {
