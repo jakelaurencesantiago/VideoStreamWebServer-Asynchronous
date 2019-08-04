@@ -23,5 +23,6 @@ An improved version of /jakelaurencesantiago/VideoStreamWebServer
 4. Open a terminal, navigate to the project directory
 5. Run thumbnail_generate.js
  > node thumbnail_generate.js
+ 
 This will generate png files of your mp4 files in the videos folder.
 Generated png files will be found in the same location as the video file.
