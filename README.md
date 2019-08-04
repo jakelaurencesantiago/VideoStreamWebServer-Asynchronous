@@ -16,7 +16,12 @@ An improved version of /jakelaurencesantiago/VideoStreamWebServer
  > node main.js
 6. Open a browser then go to http://localhost:7000
 
-
-# TODO
-1. Banner
-2. Banner/Thumbnail generator
+#Generate Video Thumbnail
+1. Download ffmpeg from https://ffmpeg.zeranoe.com/builds/
+2. Follow installation guide for Windows https://video.stackexchange.com/questions/20495/how-do-i-set-up-and-use-ffmpeg-in-windows
+3. Install Node.js (if not yet installed)
+4. Open a terminal, navigate to the project directory
+5. Run thumbnail_generate.js
+ > node thumbnail_generate.js
+This will generate png files of your mp4 files in the videos folder.
+Generated png files will be found in the same location as the video file.
