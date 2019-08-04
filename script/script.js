@@ -1,7 +1,6 @@
+'use strict';
 
-
-var bannerChangeTimer = null;
-
+let bannerChangeTimer = null;
 
 window.onload = function() {
     videoList();
@@ -23,7 +22,7 @@ window.onscroll = async () => {
 
 function videoList(path) {
     transitionInit();
-    var query = '/videolist'
+    let query = '/videolist'
     if(path) {
         query += '?path=' + path;
     }
@@ -72,7 +71,7 @@ function videoList(path) {
 
 function loadVideo(path, file) {
     transitionInit();
-    var query = '/video?'
+    let query = '/video?'
     if(file) query += 'file=' + file;
     if(path) query += '&path=' + path;
     fetchJSON(query, {method: "GET"},
@@ -114,10 +113,10 @@ function loadVideo(path, file) {
 
 function makeCategoryList(list) {
     const div = createElement('div');
-    var html = '';
+    let html = '';
     if(!isEmpty(list)) {
         html = '<h3>Categrory List</h3>';
-        for(var item of list) {
+        for(let item of list) {
             html += `<div class="category" onclick="videoList('${item.base}/${item.name}')">
                         <img src="${item.thumbnail}">
                         <div class="category_name">${item.name}</div>
@@ -130,11 +129,11 @@ function makeCategoryList(list) {
 
 function makeVideoList(list, selectedVid) {
     const div = createElement('div');
-    var html = '';
+    let html = '';
     if(!isEmpty(list)){
         html = '<h3>Video List</h3>';
-        var num = 1;
-        for(var item of list) {
+        let num = 1;
+        for(let item of list) {
             if(item.name === selectedVid) {
                 html += `<div class="vid_item selected">`;
             }
@@ -162,7 +161,7 @@ function makeVideo(data) {
     const div = createElement('div');
     const videoList = data.videoList;
     const video = videoList[data.videoInx];
-    var html = `
+    let html = `
         <div id="video_holder">
             <h3>${removeExtension(video.name)}</h3>
             <div class="video_container">
@@ -224,7 +223,7 @@ function back() {
     window.scroll({top: 0});
     const videoWrapper = selector('#video_wrapper');
     const menuWrapper = selector('#menu_wrapper');
-    var lastElem = null;
+    let lastElem = null;
     if(videoWrapper.childElementCount > 0) {
         console.log("Video back");
         lastElem = videoWrapper.lastElementChild;
