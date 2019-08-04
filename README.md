@@ -16,7 +16,7 @@ An improved version of /jakelaurencesantiago/VideoStreamWebServer
  > node main.js
 6. Open a browser then go to http://localhost:7000
 
-#Generate Video Thumbnail
+# Generate Video Thumbnail
 1. Download ffmpeg from https://ffmpeg.zeranoe.com/builds/
 2. Follow installation guide for Windows https://video.stackexchange.com/questions/20495/how-do-i-set-up-and-use-ffmpeg-in-windows
 3. Install Node.js (if not yet installed)
